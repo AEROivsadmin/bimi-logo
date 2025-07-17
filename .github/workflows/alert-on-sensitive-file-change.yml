@@ -1,0 +1,36 @@
+name: Alert on Sensitive File Change
+
+on:
+  push:
+    paths:
+      - 'bimi-logo/AerosonicLogo.svg'        
+  pull_request:
+    paths:
+      - 'bimi-logo/AerosonicLogo.svg'
+
+jobs:
+  alert:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check for file change and alert
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fileChanged = true; // Already scoped by `paths`, so this always runs when file is touched
+            const alertMessage = `
+            🚨 **Sensitive file changed!**
+            File \`bimi-logo/AerosonicLogo.svg\` was modified in:
+            - Repo: ${{ github.repository }}
+            - Commit: https://github.com/${{ github.repository }}/commit/${{ github.sha }}
+
+            Please review this change carefully.`;
+
+            // Send alert by creating an issue
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: "🚨 Sensitive file change detected",
+              body: alertMessage,
+              assignees: ['AEROivsadmin'] // 
+            });
